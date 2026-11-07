@@ -80,16 +80,16 @@ export const OpeningScreen: React.FC<OpeningScreenProps> = ({ onComplete, sister
   };
 
   // Dynamic scaling for buttons
-  // YES grows smoothly with every NO click
-  const yesScale = Math.min(1 + noCount * 0.22, 2.8);
-  // NO shrinks smoothly but stays accessible (min 0.65)
-  const noScale = Math.max(1 - noCount * 0.08, 0.65);
+  // YES grows smoothly with every NO click (capped at 1.4 on mobile so it doesn't overflow screen)
+  const yesScale = Math.min(1 + noCount * 0.12, 1.45);
+  // NO shrinks smoothly but stays accessible (min 0.7)
+  const noScale = Math.max(1 - noCount * 0.08, 0.7);
 
   const currentMessageIndex = Math.min(noCount, FUNNY_MESSAGES.length - 1);
   const currentMessage = FUNNY_MESSAGES[currentMessageIndex];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden bg-gradient-to-br from-[#1b082e] via-[#2d0f48] to-[#120522] p-4 text-white select-none">
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-gradient-to-br from-[#1b082e] via-[#2d0f48] to-[#120522] p-3 sm:p-4 text-white select-none">
       {/* Background sparkling atmosphere */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-1/6 left-1/4 w-72 h-72 bg-pink-500/20 rounded-full blur-3xl animate-pulse-glow" />
@@ -124,7 +124,7 @@ export const OpeningScreen: React.FC<OpeningScreenProps> = ({ onComplete, sister
       </div>
 
       {/* Main card */}
-      <div className="relative z-30 w-full max-w-lg mx-auto">
+      <div className="relative z-30 w-full max-w-lg mx-auto my-auto">
         <AnimatePresence mode="wait">
           {!isYesClicked ? (
             <motion.div

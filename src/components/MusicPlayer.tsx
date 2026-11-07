@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Volume2, VolumeX, Music, Play, Pause, Upload, Sparkles, ChevronUp, ChevronDown } from 'lucide-react';
 import { musicBox } from '../utils/audioSynth';
+import { getStoredAudio, saveStoredAudio } from '../utils/memoryStorage';
 
 interface MusicPlayerProps {
   autoPlayStarted?: boolean;
@@ -13,22 +14,51 @@ export const MusicPlayer: React.FC<MusicPlayerProps> = ({ autoPlayStarted = fals
   const [isExpanded, setIsExpanded] = useState(false);
   const [audioSource, setAudioSource] = useState<'synth' | 'custom'>('synth');
   const [customFileName, setCustomFileName] = useState<string | null>(null);
+  const [audioUrl, setAudioUrl] = useState('/assets/music/birthday.mp3');
+  const [storageError, setStorageError] = useState('');
+  const [isSavingSong, setIsSavingSong] = useState(false);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const hasStoredAudioRef = useRef(false);
 
   // Check if /assets/music/birthday.mp3 exists on mount
   useEffect(() => {
     const testAudio = new Audio('/assets/music/birthday.mp3');
     testAudio.addEventListener('canplaythrough', () => {
       // Custom audio file found in assets!
-      setAudioSource('custom');
-      setCustomFileName('birthday.mp3');
+      if (!hasStoredAudioRef.current) {
+        setAudioSource('custom');
+        setCustomFileName('birthday.mp3');
+      }
     });
     testAudio.addEventListener('error', () => {
       // Graceful fallback: stick with synthesized pure Web Audio music box
       setAudioSource('synth');
     });
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+    let restoredUrl: string | null = null;
+    void getStoredAudio().then((stored) => {
+      if (!stored) return;
+      restoredUrl = URL.createObjectURL(stored.blob);
+      hasStoredAudioRef.current = true;
+      if (isMounted) {
+        setAudioUrl(restoredUrl);
+        setAudioSource('custom');
+        setCustomFileName(stored.fileName);
+      } else {
+        URL.revokeObjectURL(restoredUrl);
+      }
+    }).catch((error) => {
+      if (isMounted) setStorageError(error instanceof Error ? error.message : 'Could not load the saved song.');
+    });
+    return () => {
+      isMounted = false;
+      if (restoredUrl) URL.revokeObjectURL(restoredUrl);
+    };
   }, []);
 
   // Update volume
@@ -79,24 +109,39 @@ export const MusicPlayer: React.FC<MusicPlayerProps> = ({ autoPlayStarted = fals
     setIsMuted(!isMuted);
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
+    if (!file) return;
+    if (!file.type.startsWith('audio/')) {
+      setStorageError('Please choose a valid audio file.');
+      e.currentTarget.value = '';
+      return;
+    }
+    setIsSavingSong(true);
+    setStorageError('');
+    try {
+      await saveStoredAudio({ id: 'uploaded-song', blob: file, fileName: file.name });
       const url = URL.createObjectURL(file);
+      setAudioUrl(url);
       if (audioRef.current) {
         audioRef.current.src = url;
-        audioRef.current.play();
+        void audioRef.current.play().catch(() => setStorageError('Song saved. Press Play to start it.'));
       }
+      hasStoredAudioRef.current = true;
       setAudioSource('custom');
       setCustomFileName(file.name);
       setIsPlaying(true);
       musicBox.stop();
+    } catch (error) {
+      setStorageError(error instanceof Error ? `Could not save song: ${error.message}` : 'Could not save song in browser storage.');
+    } finally {
+      setIsSavingSong(false);
     }
   };
 
   return (
     <div className="fixed top-4 right-4 z-40 max-w-xs transition-all">
-      <audio ref={audioRef} loop src="/assets/music/birthday.mp3" />
+      <audio ref={audioRef} loop src={audioUrl} />
 
       {/* Main Pill */}
       <div className="flex items-center gap-2 p-2 px-3 rounded-full bg-white/10 backdrop-blur-xl border border-pink-400/30 shadow-[0_0_20px_rgba(236,72,153,0.3)] text-white text-xs select-none">
@@ -175,6 +220,7 @@ export const MusicPlayer: React.FC<MusicPlayerProps> = ({ autoPlayStarted = fals
 
           {/* Sound Source Switcher */}
           <div className="pt-2 border-t border-pink-300/20 flex flex-col gap-2">
+            {storageError && <p role="alert" className="text-[11px] text-rose-200">{storageError}</p>}
             <span className="text-[11px] text-pink-300 font-medium">Music Source:</span>
             <div className="flex gap-1.5">
               <button
@@ -201,7 +247,7 @@ export const MusicPlayer: React.FC<MusicPlayerProps> = ({ autoPlayStarted = fals
                 }`}
               >
                 <Upload className="w-3 h-3" />
-                <span>Upload MP3</span>
+                <span>{isSavingSong ? 'Saving…' : 'Upload MP3'}</span>
               </button>
             </div>
             <input
@@ -209,6 +255,7 @@ export const MusicPlayer: React.FC<MusicPlayerProps> = ({ autoPlayStarted = fals
               type="file"
               accept="audio/*"
               className="hidden"
+              disabled={isSavingSong}
               onChange={handleFileUpload}
             />
           </div>

@@ -209,7 +209,7 @@ export default function App() {
 
   return (
     <div
-      className="fixed inset-0 w-screen h-screen bg-[#100720] text-white selection:bg-pink-500 selection:text-white font-body overflow-hidden select-none"
+      className="fixed inset-0 w-full h-dvh min-h-0 bg-[#100720] text-white selection:bg-pink-500 selection:text-white font-body overflow-hidden select-none"
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
       onWheel={handleWheel}
@@ -260,10 +260,10 @@ export default function App() {
 
         {/* 3. The Grand Multi-Page Presentation Experience */}
         {stage === 'celebration' && (
-          <div key="stage-celebration" className="relative w-full h-full flex flex-col justify-between overflow-hidden">
+          <div key="stage-celebration" className="relative w-full h-full min-h-0 flex flex-col justify-between overflow-hidden">
             
             {/* Top Presentation Bar: Progress Indicator & Navigation Chips */}
-            <header className="relative z-30 flex items-center justify-between px-3 sm:px-6 py-2.5 sm:py-3.5 bg-white/5 backdrop-blur-xl border-b border-pink-400/20 text-xs sm:text-sm">
+            <header className="relative z-30 flex items-center justify-between gap-2 px-2.5 sm:px-6 py-2 sm:py-3.5 bg-white/5 backdrop-blur-xl border-b border-pink-400/20 text-xs sm:text-sm">
               {/* Left: Birthday Girl Badge & Current Page Title */}
               <div className="flex items-center gap-2 sm:gap-3 min-w-0">
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-pink-500/20 border border-pink-400/30 text-pink-200 font-semibold text-[11px] sm:text-xs shrink-0">
@@ -301,7 +301,7 @@ export default function App() {
 
               {/* Right: Modern Page Progress Indicator (e.g. "1 / 6") */}
               <div className="flex items-center gap-2 shrink-0">
-                <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-pink-500/20 to-purple-500/20 border border-pink-400/30 text-pink-200 font-bold text-xs shadow-sm">
+              <div className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 rounded-full bg-gradient-to-r from-pink-500/20 to-purple-500/20 border border-pink-400/30 text-pink-200 font-bold text-[10px] sm:text-xs shadow-sm">
                   <span className="text-pink-300">Page</span>
                   <span className="text-white text-sm font-extrabold">{currentPage + 1}</span>
                   <span className="text-pink-300/60 font-normal">/</span>
@@ -311,7 +311,7 @@ export default function App() {
             </header>
 
             {/* Central Viewport Screen (100vw x 100vh minus header and footer bars) */}
-            <div className="relative flex-1 w-full h-full overflow-hidden">
+            <div className="relative flex-1 min-h-0 w-full overflow-hidden">
               <AnimatePresence initial={false} custom={direction} mode="wait">
                 <motion.div
                   key={currentPage}
@@ -320,7 +320,7 @@ export default function App() {
                   initial="enter"
                   animate="center"
                   exit="exit"
-                  className="absolute inset-0 w-full h-full flex flex-col overflow-y-auto overflow-x-hidden p-2 sm:p-4 md:p-6"
+                  className="absolute inset-0 w-full h-full flex flex-col overflow-y-auto overflow-x-hidden overscroll-contain p-2 sm:p-4 md:p-6"
                 >
                   <div className="m-auto w-full max-w-6xl">
                     {currentPage === 0 && <CelebrationHero sisterName={sisterName} />}
@@ -363,7 +363,7 @@ export default function App() {
             </div>
 
             {/* Bottom Controls Bar: BACK / NEXT Buttons + Swipe/Keyboard Hints */}
-            <footer className="relative z-30 flex items-center justify-between px-3 sm:px-6 py-2.5 sm:py-3 bg-white/5 backdrop-blur-xl border-t border-pink-400/20 text-xs">
+            <footer className="relative z-30 flex items-center justify-between gap-2 px-2.5 sm:px-6 py-2 sm:py-3 bg-white/5 backdrop-blur-xl border-t border-pink-400/20 text-xs">
               {/* Back Button */}
               <button
                 onClick={goToPrevPage}

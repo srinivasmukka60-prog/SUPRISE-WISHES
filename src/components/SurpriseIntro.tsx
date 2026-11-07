@@ -18,7 +18,7 @@ export const SurpriseIntro: React.FC<SurpriseIntroProps> = ({ sisterName, onOpen
   };
 
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center p-4 bg-gradient-to-b from-[#140624] via-[#21093c] to-[#120520] text-white">
+    <div className="fixed inset-0 z-40 flex items-center justify-center overflow-y-auto p-3 sm:p-4 bg-gradient-to-b from-[#140624] via-[#21093c] to-[#120520] text-white">
       {/* Ambient background glows */}
       <div className="absolute w-[500px] h-[500px] rounded-full bg-pink-500/20 blur-3xl pointer-events-none animate-pulse-glow" />
       <div className="absolute w-[400px] h-[400px] rounded-full bg-purple-600/25 blur-3xl pointer-events-none animate-pulse-glow" style={{ animationDelay: '1.2s' }} />
@@ -27,7 +27,7 @@ export const SurpriseIntro: React.FC<SurpriseIntroProps> = ({ sisterName, onOpen
         initial={{ opacity: 0, scale: 0.9, y: 30 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ duration: 0.8, ease: 'easeOut' }}
-        className="relative z-10 max-w-xl w-full text-center p-8 sm:p-12 rounded-3xl bg-white/10 backdrop-blur-2xl border border-pink-400/30 shadow-[0_0_60px_rgba(219,39,119,0.35)]"
+        className="relative z-10 my-auto max-w-xl w-full text-center p-5 sm:p-12 rounded-3xl bg-white/10 backdrop-blur-2xl border border-pink-400/30 shadow-[0_0_60px_rgba(219,39,119,0.35)]"
       >
         {/* Crown & Princess Tag */}
         <motion.div

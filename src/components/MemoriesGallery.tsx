@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Image as ImageIcon, Plus, X, ZoomIn, Calendar, Sparkles, Heart, Trash2 } from 'lucide-react';
 import { MemoryItem } from '../types';
 import { musicBox } from '../utils/audioSynth';
+import { deleteStoredMemory, getStoredMemories, legacyMemoryToStored, saveStoredMemory, StoredMemory, storedMemoryToItem } from '../utils/memoryStorage';
 
 interface MemoriesGalleryProps {
   sisterName: string;
@@ -72,15 +73,10 @@ const TIMELINE_EVENTS = [
 ];
 
 export const MemoriesGallery: React.FC<MemoriesGalleryProps> = ({ sisterName }) => {
-  const [memories, setMemories] = useState<MemoryItem[]>(() => {
-    try {
-      const saved = localStorage.getItem('shruthi_birthday_memories');
-      if (saved) return JSON.parse(saved);
-    } catch {
-      // Fallback
-    }
-    return DEFAULT_MEMORIES;
-  });
+  const [customMemories, setCustomMemories] = useState<MemoryItem[]>([]);
+  const [storageError, setStorageError] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [memories, setMemories] = useState<MemoryItem[]>(DEFAULT_MEMORIES);
 
   const [activePhoto, setActivePhoto] = useState<MemoryItem | null>(null);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
@@ -88,61 +84,136 @@ export const MemoriesGallery: React.FC<MemoriesGalleryProps> = ({ sisterName }) 
   const [newCaption, setNewCaption] = useState('');
   const [newDate, setNewDate] = useState('');
   const [newImageUrl, setNewImageUrl] = useState('');
+  const [newImageBlob, setNewImageBlob] = useState<Blob | null>(null);
 
-  // Persist to local storage
+  // Load durable photo Blobs and migrate custom photos from the previous localStorage format.
   useEffect(() => {
-    try {
-      localStorage.setItem('shruthi_birthday_memories', JSON.stringify(memories));
-    } catch {
-      // storage quota or disabled
-    }
-  }, [memories]);
-
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        if (typeof reader.result === 'string') {
-          setNewImageUrl(reader.result);
+    let isMounted = true;
+    let objectUrls: string[] = [];
+    const load = async () => {
+      try {
+        const stored = await getStoredMemories();
+        let migrated = false;
+        try {
+          const legacy = localStorage.getItem('shruthi_birthday_memories');
+          if (legacy) {
+            const entries: MemoryItem[] = JSON.parse(legacy);
+            const knownIds = new Set(stored.map((memory) => memory.id));
+            for (const item of entries) {
+              const oldMemory = legacyMemoryToStored(item);
+              if (oldMemory && !knownIds.has(oldMemory.id)) {
+                await saveStoredMemory(oldMemory);
+                stored.push(oldMemory);
+                knownIds.add(oldMemory.id);
+                migrated = true;
+              }
+            }
+            if (migrated) localStorage.removeItem('shruthi_birthday_memories');
+          }
+        } catch {
+          // IndexedDB records still load if legacy data is invalid or inaccessible.
         }
-      };
-      reader.readAsDataURL(file);
+        const items = stored.map(storedMemoryToItem);
+        objectUrls = items.map((item) => item.url);
+        if (isMounted) {
+          setCustomMemories(items);
+          setMemories([...items, ...DEFAULT_MEMORIES]);
+        } else {
+          objectUrls.forEach(URL.revokeObjectURL);
+        }
+      } catch (error) {
+        if (isMounted) setStorageError(error instanceof Error ? error.message : 'Could not load saved photos.');
+      }
+    };
+    void load();
+    return () => {
+      isMounted = false;
+      objectUrls.forEach(URL.revokeObjectURL);
+    };
+  }, []);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.currentTarget;
+    const file = e.target.files?.[0];
+    setStorageError('');
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      setStorageError('Please choose a valid image file.');
+      input.value = '';
+      return;
+    }
+    try {
+      if (typeof createImageBitmap === 'function') {
+        const decodedImage = await createImageBitmap(file);
+        decodedImage.close();
+      }
+      setNewImageBlob(file);
+      setNewImageUrl(URL.createObjectURL(file));
+    } catch {
+      setNewImageBlob(null);
+      setNewImageUrl('');
+      setStorageError('This image could not be opened. Please choose another image file.');
+      input.value = '';
     }
   };
 
-  const handleAddMemory = (e: React.FormEvent) => {
+  const handleAddMemory = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newImageUrl) return;
+    if (!newImageBlob || isSaving) return;
 
-    const newMem: MemoryItem = {
-      id: `mem-${Date.now()}`,
-      url: newImageUrl,
+    const id = `mem-${crypto.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`}`;
+    const stored: StoredMemory = {
+      id,
+      blob: newImageBlob,
       title: newTitle || `Special Memory with ${sisterName}`,
       caption: newCaption || 'A moment frozen in time, filled with love and laughter.',
       date: newDate || 'Special Day',
       tag: 'Real Memory',
       isCustom: true
     };
-
-    setMemories([newMem, ...memories]);
-    musicBox.playPop();
-    setIsUploadOpen(false);
-    setNewImageUrl('');
-    setNewTitle('');
-    setNewCaption('');
-    setNewDate('');
+    setIsSaving(true);
+    setStorageError('');
+    try {
+      await saveStoredMemory(stored);
+      const newMem = storedMemoryToItem(stored);
+      setCustomMemories((items) => [newMem, ...items]);
+      setMemories((items) => [newMem, ...items]);
+      musicBox.playPop();
+      setIsUploadOpen(false);
+      setNewImageUrl('');
+      setNewImageBlob(null);
+      setNewTitle('');
+      setNewCaption('');
+      setNewDate('');
+    } catch (error) {
+      setStorageError(error instanceof Error ? `Could not save photo: ${error.message}` : 'Could not save photo. Check available browser storage.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const handleDeleteMemory = (id: string, e: React.MouseEvent) => {
+  const handleDeleteMemory = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    setMemories(memories.filter((m) => m.id !== id));
+    try {
+      await deleteStoredMemory(id);
+      setCustomMemories((items) => {
+        const removed = items.find((item) => item.id === id);
+        if (removed?.url.startsWith('blob:')) URL.revokeObjectURL(removed.url);
+        return items.filter((item) => item.id !== id);
+      });
+      setMemories((items) => items.filter((item) => item.id !== id));
+      if (activePhoto?.id === id) setActivePhoto(null);
+      setStorageError('');
+    } catch (error) {
+      setStorageError(error instanceof Error ? `Could not delete photo: ${error.message}` : 'Could not delete photo.');
+    }
   };
 
   return (
-    <section className="relative py-4 sm:py-6 px-4 sm:px-6 max-w-6xl mx-auto flex flex-col justify-center">
+    <section className="relative py-3 sm:py-6 px-3 sm:px-6 max-w-6xl mx-auto flex flex-col justify-center">
       {/* Section Header */}
       <div className="text-center mb-6">
+        {storageError && <p role="alert" className="mb-3 text-sm text-rose-200">{storageError}</p>}
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-pink-500/20 border border-pink-400/30 text-pink-200 text-xs sm:text-sm font-semibold mb-3">
           <ImageIcon className="w-4 h-4 text-pink-300" />
           <span>Treasured Moments</span>
@@ -170,7 +241,7 @@ export const MemoriesGallery: React.FC<MemoriesGalleryProps> = ({ sisterName }) 
       </div>
 
       {/* Gallery Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 min-[480px]:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
         {memories.map((mem, index) => (
           <motion.div
             key={mem.id}
@@ -292,14 +363,14 @@ export const MemoriesGallery: React.FC<MemoriesGalleryProps> = ({ sisterName }) 
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setActivePhoto(null)}
-            className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md p-4 flex items-center justify-center cursor-pointer"
+            className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md p-3 sm:p-4 flex items-center justify-center overflow-y-auto cursor-pointer"
           >
             <motion.div
               initial={{ scale: 0.85, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.85, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="relative max-w-2xl w-full bg-[#1b082e] border border-pink-400/40 rounded-3xl overflow-hidden shadow-[0_0_50px_rgba(236,72,153,0.5)] cursor-default"
+              className="relative max-w-2xl w-full max-h-[92dvh] overflow-y-auto bg-[#1b082e] border border-pink-400/40 rounded-3xl shadow-[0_0_50px_rgba(236,72,153,0.5)] cursor-default"
             >
               <button
                 onClick={() => setActivePhoto(null)}
@@ -344,14 +415,14 @@ export const MemoriesGallery: React.FC<MemoriesGalleryProps> = ({ sisterName }) 
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setIsUploadOpen(false)}
-            className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md p-4 flex items-center justify-center cursor-pointer"
+            className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md p-3 sm:p-4 flex items-center justify-center overflow-y-auto cursor-pointer"
           >
             <motion.div
               initial={{ scale: 0.9, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 20 }}
               onClick={(e) => e.stopPropagation()}
-              className="relative max-w-md w-full bg-[#1e0a33] border border-pink-400/40 rounded-3xl p-6 shadow-2xl cursor-default text-white"
+              className="relative max-w-md w-full max-h-[92dvh] overflow-y-auto bg-[#1e0a33] border border-pink-400/40 rounded-3xl p-4 sm:p-6 shadow-2xl cursor-default text-white"
             >
               <div className="flex items-center justify-between pb-3 border-b border-pink-300/20 mb-4">
                 <h3 className="text-lg font-bold font-serif-title text-pink-200 flex items-center gap-2">
@@ -385,6 +456,7 @@ export const MemoriesGallery: React.FC<MemoriesGalleryProps> = ({ sisterName }) 
                     </div>
                   )}
                 </div>
+                {storageError && <p role="alert" className="text-xs text-rose-200">{storageError}</p>}
 
                 <div>
                   <label className="block text-xs font-semibold text-pink-200 mb-1">
@@ -428,10 +500,10 @@ export const MemoriesGallery: React.FC<MemoriesGalleryProps> = ({ sisterName }) 
                 <div className="pt-2">
                   <button
                     type="submit"
-                    disabled={!newImageUrl}
+                    disabled={!newImageUrl || isSaving}
                     className="w-full py-2.5 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold text-xs shadow-lg hover:brightness-110 disabled:opacity-50 cursor-pointer"
                   >
-                    Save to Memories 💖
+                    {isSaving ? 'Saving…' : 'Save to Memories 💖'}
                   </button>
                 </div>
               </form>

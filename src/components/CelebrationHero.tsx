@@ -125,34 +125,34 @@ export const CelebrationHero: React.FC<CelebrationHeroProps> = ({ sisterName }) 
         className="relative z-10 max-w-4xl mx-auto"
       >
         {/* Crown Badge */}
-        <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-gradient-to-r from-pink-500/20 via-purple-500/20 to-pink-500/20 border border-pink-400/30 text-pink-200 text-sm sm:text-base font-semibold mb-4 shadow-lg backdrop-blur-md">
-          <PartyPopper className="w-4 h-4 text-pink-300" />
+        <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-1 sm:py-2 rounded-full bg-gradient-to-r from-pink-500/20 via-purple-500/20 to-pink-500/20 border border-pink-400/30 text-pink-200 text-xs sm:text-base font-semibold mb-2 sm:mb-4 shadow-lg backdrop-blur-md">
+          <PartyPopper className="w-3.5 sm:w-4 h-3.5 sm:h-4 text-pink-300" />
           <span>The Most Awaited Celebration</span>
-          <Sparkles className="w-4 h-4 text-yellow-300" />
+          <Sparkles className="w-3.5 sm:w-4 h-3.5 sm:h-4 text-yellow-300" />
         </div>
 
         {/* Grand Title */}
-        <h1 className="text-4xl sm:text-6xl md:text-7xl font-black tracking-tight font-serif-title mb-4">
+        <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tight font-serif-title mb-2 sm:mb-4">
           <span className="block bg-gradient-to-r from-pink-200 via-white to-purple-200 bg-clip-text text-transparent drop-shadow-[0_0_35px_rgba(236,72,153,0.7)]">
             HAPPY BIRTHDAY
           </span>
-          <span className="block mt-1 bg-gradient-to-r from-pink-400 via-rose-300 to-purple-300 bg-clip-text text-transparent drop-shadow-[0_0_40px_rgba(255,105,180,0.9)]">
+          <span className="block mt-0.5 sm:mt-1 bg-gradient-to-r from-pink-400 via-rose-300 to-purple-300 bg-clip-text text-transparent drop-shadow-[0_0_40px_rgba(255,105,180,0.9)]">
             {sisterName.toUpperCase()}! 👑
           </span>
         </h1>
 
         {/* Emotional Subtitle Banner */}
-        <p className="text-lg sm:text-2xl md:text-3xl font-bold text-pink-200/90 tracking-wide font-serif-title max-w-2xl mx-auto drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)]">
+        <p className="text-base sm:text-xl md:text-2xl font-bold text-pink-200/90 tracking-wide font-serif-title max-w-2xl mx-auto drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)]">
           HAPPY BIRTHDAY TO THE MOST SPECIAL GIRL IN MY WORLD! ❤️
         </p>
 
-        <p className="mt-2 text-sm sm:text-base text-pink-300/70 max-w-xl mx-auto">
+        <p className="mt-1 sm:mt-2 text-xs sm:text-sm md:text-base text-pink-300/70 max-w-xl mx-auto">
           Today is all about celebrating your radiant smile, your pure heart, and the magic you bring into my life.
         </p>
       </motion.div>
 
       {/* 3D Tiered Birthday Cake with Interactive Candles */}
-      <div className="relative z-20 my-10 w-full max-w-md mx-auto">
+      <div className="relative z-20 my-3 sm:my-8 w-full max-w-md mx-auto scale-[0.78] min-[380px]:scale-[0.88] sm:scale-100 origin-top">
         {/* Cake Container */}
         <div className="relative flex flex-col items-center">
           {/* Candles Row */}
