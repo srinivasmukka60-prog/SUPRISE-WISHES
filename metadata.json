@@ -1,0 +1,6 @@
+{
+  "name": "Shruthi's Magical Birthday Surprise",
+  "description": "An enchanting, emotional, and interactive birthday surprise website for Shruthi with interactive cake, candles, heartfelt letter, memories gallery, and secret surprise.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
