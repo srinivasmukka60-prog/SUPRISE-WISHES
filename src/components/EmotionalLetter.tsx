@@ -2,13 +2,14 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Heart, Sparkles, Mail, Check, Copy, Printer } from 'lucide-react';
 import { musicBox } from '../utils/audioSynth';
+import { fireHeartConfetti } from '../utils/confetti';
 
 interface EmotionalLetterProps {
   sisterName: string;
 }
 
 export const EmotionalLetter: React.FC<EmotionalLetterProps> = ({ sisterName }) => {
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const letterParagraphs = [
@@ -36,68 +37,101 @@ export const EmotionalLetter: React.FC<EmotionalLetterProps> = ({ sisterName }) 
     window.print();
   };
 
-  const handleToggleOpen = () => {
+  const handleToggleOpen = (e?: React.MouseEvent) => {
     musicBox.playSparkle();
+    if (!isOpen) {
+      if (e) {
+        fireHeartConfetti(e.clientX, e.clientY);
+      } else {
+        fireHeartConfetti();
+      }
+    }
     setIsOpen(!isOpen);
   };
 
   return (
-    <section id="letter-section" className="relative py-20 px-4 sm:px-6 max-w-4xl mx-auto">
-      {/* Section Header */}
-      <div className="text-center mb-10">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-pink-500/20 border border-pink-400/30 text-pink-200 text-xs sm:text-sm font-semibold mb-3">
-          <Mail className="w-4 h-4 text-pink-300" />
-          <span>Straight From My Heart</span>
-        </div>
-        <h2 className="text-3xl sm:text-5xl font-black font-serif-title bg-gradient-to-r from-pink-200 via-rose-100 to-purple-200 bg-clip-text text-transparent">
-          A Letter For My Sister 💌
-        </h2>
-        <p className="mt-2 text-sm text-pink-300/70">
-          Words I might not say every day, but mean with all my heart.
-        </p>
-      </div>
-
-      {/* Envelope / Letter Container */}
-      <div className="relative">
-        {/* If letter is closed: Envelope with Wax Seal */}
-        {!isOpen ? (
-          <motion.div
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="w-full max-w-lg mx-auto p-10 sm:p-14 rounded-3xl bg-gradient-to-br from-[#2f1147] via-[#240b38] to-[#1a072b] border-2 border-pink-400/40 shadow-[0_0_50px_rgba(236,72,153,0.3)] text-center flex flex-col items-center justify-center cursor-pointer hover:border-pink-300 transition-all group"
-            onClick={handleToggleOpen}
-          >
-            {/* Wax Seal Button */}
-            <motion.div
-              whileHover={{ scale: 1.1, rotate: 5 }}
-              whileTap={{ scale: 0.95 }}
-              className="w-20 h-20 rounded-full bg-gradient-to-tr from-rose-700 via-red-600 to-rose-500 shadow-[0_0_30px_rgba(225,29,72,0.8)] border-4 border-amber-300 flex items-center justify-center text-amber-200 mb-6 relative"
-            >
-              <Heart className="w-10 h-10 fill-amber-200 text-amber-200" />
-              <div className="absolute inset-0 rounded-full border border-red-900/40" />
-            </motion.div>
-
-            <h3 className="text-2xl font-bold font-serif-title text-pink-100 mb-2">
-              To My Beloved Sister {sisterName}
-            </h3>
-            <p className="text-sm text-pink-300/80 mb-6">
-              Sealed with unconditional love. Click the wax seal to open.
-            </p>
-
-            <span className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-pink-500/30 border border-pink-400 text-white font-semibold text-sm group-hover:bg-pink-500/50 transition-colors">
-              <Sparkles className="w-4 h-4 text-yellow-300" />
-              <span>Break Seal &amp; Read Letter 💌</span>
-            </span>
-          </motion.div>
-        ) : (
-          /* Opened Parchment Handwritten Letter */
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
+    <section id="letter-section" className="relative py-4 sm:py-6 px-4 sm:px-6 max-w-4xl mx-auto flex flex-col justify-center min-h-[75vh]">
+      {/* If letter is closed: Match "A little note for you" pink popup envelope card */}
+      {!isOpen ? (
+        <div className="flex flex-col items-center justify-center my-auto">
+          {/* Handwritten Title */}
+          <motion.h2
+            initial={{ opacity: 0, y: -15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
+            transition={{ duration: 0.6 }}
+            className="text-3xl sm:text-4xl md:text-5xl font-handwriting text-pink-100 text-center mb-8 drop-shadow-[0_2px_15px_rgba(244,114,182,0.4)]"
+          >
+            A little note for you
+          </motion.h2>
+
+          {/* Cute Pink Card as shown in user screenshot */}
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            whileHover={{ scale: 1.04, y: -4 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={handleToggleOpen}
+            className="w-full max-w-sm sm:max-w-md rounded-[28px] bg-[#ffd1e3] overflow-hidden shadow-[0_15px_45px_rgba(244,114,182,0.35)] border-2 border-pink-300/60 cursor-pointer select-none transition-all group"
+          >
+            {/* Top Pink Header Bar with two small hearts */}
+            <div className="h-14 bg-[#ff8eb4] flex items-center justify-between px-6">
+              <Heart className="w-5 h-5 fill-[#ff1493] text-[#ff1493] drop-shadow-sm" />
+              <Heart className="w-5 h-5 fill-[#ff1493] text-[#ff1493] drop-shadow-sm" />
+            </div>
+
+            {/* Card Body */}
+            <div className="py-8 sm:py-10 px-6 flex flex-col items-center justify-center text-center">
+              {/* Center Heart Ribbon Badge */}
+              <div className="relative mb-5 flex flex-col items-center">
+                {/* Heart Icon */}
+                <div className="relative z-10 w-16 h-16 rounded-full flex items-center justify-center">
+                  <Heart className="w-14 h-14 fill-[#e60067] text-[#e60067] drop-shadow-md group-hover:scale-110 transition-transform duration-300" />
+                </div>
+                {/* Ribbon tails underneath heart */}
+                <div className="flex items-center gap-1 -mt-3 z-0">
+                  <div
+                    className="w-3.5 h-6 bg-[#b5145b] rounded-b-sm rotate-[20deg] shadow-sm"
+                    style={{ clipPath: 'polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%)' }}
+                  />
+                  <div
+                    className="w-3.5 h-6 bg-[#b5145b] rounded-b-sm -rotate-[20deg] shadow-sm"
+                    style={{ clipPath: 'polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%)' }}
+                  />
+                </div>
+              </div>
+
+              {/* Tap to open text */}
+              <p className="text-base sm:text-lg font-medium text-[#d91b70] tracking-wide group-hover:text-[#b01056] transition-colors flex items-center justify-center gap-1.5">
+                <span>Tap to open</span>
+                <span className="text-sm">💌</span>
+              </p>
+            </div>
+          </motion.div>
+        </div>
+      ) : (
+        <div>
+          {/* Section Header */}
+          <div className="text-center mb-6">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-pink-500/20 border border-pink-400/30 text-pink-200 text-xs sm:text-sm font-semibold mb-3">
+              <Mail className="w-4 h-4 text-pink-300" />
+              <span>Straight From My Heart</span>
+            </div>
+            <h2 className="text-3xl sm:text-5xl font-black font-serif-title bg-gradient-to-r from-pink-200 via-rose-100 to-purple-200 bg-clip-text text-transparent">
+              A Letter For My Sister 💌
+            </h2>
+            <p className="mt-2 text-sm text-pink-300/70">
+              Words I might not say every day, but mean with all my heart.
+            </p>
+          </div>
+
+          {/* Opened Parchment Handwritten Letter */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
             className="relative rounded-3xl bg-gradient-to-b from-[#fffbf2] via-[#fff9eb] to-[#fff4dc] text-[#2b1704] p-6 sm:p-12 shadow-[0_15px_60px_rgba(0,0,0,0.6)] border-4 border-[#e8d5b5] overflow-hidden"
           >
-            {/* Subtle paper decorative corners & lines */}
+            {/* Subtle paper decorative corners */}
             <div className="absolute top-4 left-4 text-amber-600/30 text-2xl select-none">❧</div>
             <div className="absolute top-4 right-4 text-amber-600/30 text-2xl select-none">☙</div>
             <div className="absolute bottom-4 left-4 text-amber-600/30 text-2xl select-none">☙</div>
@@ -144,9 +178,9 @@ export const EmotionalLetter: React.FC<EmotionalLetterProps> = ({ sisterName }) 
                 </button>
 
                 <button
-                  onClick={handleToggleOpen}
+                  onClick={() => handleToggleOpen()}
                   className="px-3 py-1.5 rounded-xl bg-[#f0dfc2] hover:bg-[#e4cfad] text-[#5c3710] font-medium text-xs transition-colors cursor-pointer"
-                  title="Fold back into envelope"
+                  title="Close back"
                 >
                   Fold ✉️
                 </button>
@@ -191,8 +225,8 @@ export const EmotionalLetter: React.FC<EmotionalLetterProps> = ({ sisterName }) 
               </div>
             </div>
           </motion.div>
-        )}
-      </div>
+        </div>
+      )}
     </section>
   );
 };

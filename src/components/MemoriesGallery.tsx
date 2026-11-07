@@ -140,9 +140,9 @@ export const MemoriesGallery: React.FC<MemoriesGalleryProps> = ({ sisterName }) 
   };
 
   return (
-    <section className="relative py-20 px-4 sm:px-6 max-w-6xl mx-auto">
+    <section className="relative py-4 sm:py-6 px-4 sm:px-6 max-w-6xl mx-auto flex flex-col justify-center">
       {/* Section Header */}
-      <div className="text-center mb-12">
+      <div className="text-center mb-6">
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-pink-500/20 border border-pink-400/30 text-pink-200 text-xs sm:text-sm font-semibold mb-3">
           <ImageIcon className="w-4 h-4 text-pink-300" />
           <span>Treasured Moments</span>

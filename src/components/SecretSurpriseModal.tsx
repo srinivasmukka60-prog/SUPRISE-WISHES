@@ -23,7 +23,7 @@ export const SecretSurpriseModal: React.FC<SecretSurpriseModalProps> = ({ sister
   };
 
   return (
-    <section className="relative py-24 px-4 text-center">
+    <section className="relative py-8 sm:py-12 px-4 text-center flex flex-col justify-center min-h-[60vh]">
       {/* Decorative Aurora Glow behind button */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
         <div className="w-96 h-48 bg-gradient-to-r from-pink-600/30 via-purple-600/30 to-pink-600/30 blur-3xl rounded-full animate-pulse-glow" />

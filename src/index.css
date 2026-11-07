@@ -119,15 +119,21 @@
 
 /* Custom scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #120726;
+  background: rgba(18, 7, 38, 0.6);
 }
 ::-webkit-scrollbar-thumb {
-  background: #3b1d6e;
+  background: rgba(236, 72, 153, 0.4);
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #ec4899;
+  background: rgba(236, 72, 153, 0.8);
+}
+
+/* Prevent accidental browser elastic bounce or page scrolling when in presentation mode */
+html, body {
+  overscroll-behavior: none;
 }

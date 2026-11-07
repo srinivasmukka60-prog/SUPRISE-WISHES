@@ -65,7 +65,7 @@ export const CelebrationHero: React.FC<CelebrationHeroProps> = ({ sisterName }) 
   };
 
   return (
-    <section className="relative min-h-[90vh] flex flex-col items-center justify-center text-center px-4 pt-16 pb-12 overflow-hidden">
+    <section className="relative min-h-[78vh] flex flex-col items-center justify-center text-center px-4 py-4 sm:py-6 overflow-hidden">
       {/* Floating Decorative Balloons */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         {/* Balloon 1: Pink */}

@@ -26,8 +26,8 @@ export const Footer: React.FC<FooterProps> = ({
   };
 
   return (
-    <footer className="relative z-10 py-12 px-4 border-t border-pink-400/20 text-center text-xs text-pink-300/70">
-      <div className="max-w-md mx-auto space-y-4">
+    <footer className="relative z-10 py-8 px-4 text-center text-xs text-pink-300/70 flex flex-col justify-center min-h-[50vh]">
+      <div className="max-w-lg mx-auto space-y-6 p-6 sm:p-8 rounded-3xl bg-white/5 backdrop-blur-xl border border-pink-400/20 shadow-[0_0_35px_rgba(236,72,153,0.15)]">
         {/* Heart message */}
         <p className="flex items-center justify-center gap-1.5 text-sm font-medium text-pink-200">
           <span>Crafted with endless love for</span>
